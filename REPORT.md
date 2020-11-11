@@ -12,3 +12,7 @@ The following sections describe efforts to improve from this baseline performanc
 # Increase in Model Size
 
 A first exploratory step to improve learning is to adapt the model structure.  A cursory look at the [DDPG Bipedal course exercise](https://github.com/udacity/deep-reinforcement-learning/tree/master/ddpg-bipedal) in the Udacity Deep Reinforcement Learning repository on GitHub shows that a more complex model is needed to learn in a more complex environment.  Indeed, although the size of individual layers in the Bipedal model are individually smaller than for the Pendulum model (256 and 128 instead of 400 and 300), the Critic in the Bipedal model has a deeper architecture with three fully connected layers.
+
+Results obtained here show that although there was some (very little) improvement, clearly there is some underlying issue that is preventing the agent from learning in both cases.
+
+![Deeper Model](./images/deeper-model.png)
