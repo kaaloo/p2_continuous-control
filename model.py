@@ -4,15 +4,17 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
+
 def hidden_init(layer):
     fan_in = layer.weight.data.size()[0]
     lim = 1. / np.sqrt(fan_in)
     return (-lim, lim)
 
+
 class Actor(nn.Module):
     """Actor (Policy) Model."""
 
-    def __init__(self, state_size, action_size, seed, fc_units=256):
+    def __init__(self, state_size, action_size, seed, fc_units=256, batch_normalization=False):
         """Initialize parameters and build model.
         Params
         ======
@@ -23,8 +25,11 @@ class Actor(nn.Module):
             fc2_units (int): Number of nodes in second hidden layer
         """
         super(Actor, self).__init__()
+        self.bn = batch_normalization
         self.seed = torch.manual_seed(seed)
+        self.bn1 = nn.BatchNorm1d(state_size)
         self.fc1 = nn.Linear(state_size, fc_units)
+        self.bn2 = nn.BatchNorm1d(fc_units)
         self.fc2 = nn.Linear(fc_units, action_size)
         self.reset_parameters()
 
@@ -34,14 +39,14 @@ class Actor(nn.Module):
 
     def forward(self, state):
         """Build an actor (policy) network that maps states -> actions."""
-        x = F.relu(self.fc1(state))
-        return F.tanh(self.fc2(x))
+        x = F.relu(self.fc1(self.bn1(state) if self.bn else state))
+        return F.tanh(self.fc2(self.bn2(x) if self.bn else x))
 
 
 class Critic(nn.Module):
     """Critic (Value) Model."""
 
-    def __init__(self, state_size, action_size, seed, fcs1_units=256, fc2_units=256, fc3_units=128):
+    def __init__(self, state_size, action_size, seed, fcs1_units=256, fc2_units=256, fc3_units=128, batch_normalization=False):
         """Initialize parameters and build model.
         Params
         ======
@@ -52,10 +57,15 @@ class Critic(nn.Module):
             fc2_units (int): Number of nodes in the second hidden layer
         """
         super(Critic, self).__init__()
+        self.bn = batch_normalization
         self.seed = torch.manual_seed(seed)
+        self.bn1 = nn.BatchNorm1d(state_size)
         self.fcs1 = nn.Linear(state_size, fcs1_units)
+        self.bn2 = nn.BatchNorm1d(fcs1_units+action_size)
         self.fc2 = nn.Linear(fcs1_units+action_size, fc2_units)
+        self.bn3 = nn.BatchNorm1d(fc2_units)
         self.fc3 = nn.Linear(fc2_units, fc3_units)
+        self.bn4 = nn.BatchNorm1d(fc3_units)
         self.fc4 = nn.Linear(fc3_units, 1)
         self.reset_parameters()
 
@@ -67,8 +77,8 @@ class Critic(nn.Module):
 
     def forward(self, state, action):
         """Build a critic (value) network that maps (state, action) pairs -> Q-values."""
-        xs = F.leaky_relu(self.fcs1(state))
+        xs = F.leaky_relu(self.fcs1(self.bn1(state) if self.bn else state))
         x = torch.cat((xs, action), dim=1)
-        x = F.leaky_relu(self.fc2(x))
-        x = F.leaky_relu(self.fc3(x))
-        return self.fc4(x)
+        x = F.leaky_relu(self.fc2(self.bn2(x) if self.bn else x))
+        x = F.leaky_relu(self.fc3(self.bn3(x) if self.bn else x))
+        return self.fc4(self.bn4(x)if self.bn else x)

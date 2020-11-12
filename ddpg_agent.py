@@ -38,12 +38,12 @@ class Agent():
 
         # Actor Network (w/ Target Network)
         self.actor_local = Actor(state_size, action_size, random_seed).to(device)
-        self.actor_target = Actor(state_size, action_size, random_seed).to(device)
+        self.actor_target = Actor(state_size, action_size, random_seed, batch_normalization=True).to(device)
         self.actor_optimizer = optim.Adam(self.actor_local.parameters(), lr=LR_ACTOR)
 
         # Critic Network (w/ Target Network)
         self.critic_local = Critic(state_size, action_size, random_seed).to(device)
-        self.critic_target = Critic(state_size, action_size, random_seed).to(device)
+        self.critic_target = Critic(state_size, action_size, random_seed, batch_normalization=True).to(device)
         self.critic_optimizer = optim.Adam(self.critic_local.parameters(), lr=LR_CRITIC, weight_decay=WEIGHT_DECAY)
 
         # Noise process
