@@ -29,6 +29,8 @@ To finish up on this topic, I had after all this the idea of going back to take 
 
 The results below are the result of a run with Noise Decay which display much better learning but which is however not on par with the performance demonstrated in Witold's notebook.
 
+![Noise Decay Results](images/noise-decay-results.png)
+
 # Batch Normalization
 
 Now that there was some signs that the goal of this project could be attainable, I wanted to go back to the DDPG Article and apply batch normalization since there could be sizeable differences in the range and mean of the different state parameters. Indeed in section 3 of the DDPG Article, the authors list several techniques to improve on DQN including batch normalization in the actor and critic:
