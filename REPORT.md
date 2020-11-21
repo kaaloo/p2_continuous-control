@@ -36,3 +36,36 @@ The results below are the result of a run with Noise Decay which display much be
 Now that there was some signs that the goal of this project could be attainable, I wanted to go back to the DDPG Article and apply batch normalization since there could be sizeable differences in the range and mean of the different state parameters. Indeed in section 3 of the DDPG Article, the authors list several techniques to improve on DQN including batch normalization in the actor and critic:
 
 > In the low-dimensional case, we used batch normalization on the state input and all layers of the μ network and all layers of the Q network prior to the action input
+
+Getting batch normalization right proved to be tricky.  Initially the score hovered around 0.0 even after trying a significantly greater number of episodes (700).  The path to solving the environment proved to be a combination of tweaking various hyperparameters, getting batch normalization right, using a trick from the baseline published in the udacity course pages, and removing a step in the training loop which was significantly lengthening the training process. Once these items where resolved it was possible to make some progress.
+
+## Getting Batch Normalization Right
+
+In this experiment the model was initially updated to include a `BatchNorm1d` layer before each `Linear` layer as per the experimental conditions put forth in the DDPG Article. The agent's score however did not improve until the batch normalization layer that was being used in the Critic after the layer where the action is concatenated to the first layer output was dropped.  In the Critic's forward method batch normalization doesn't take place after the concatenation step, namely before the third fully connected layer `fc3`.
+
+```python
+    def forward(self, state, action):
+        """Build a critic (value) network that maps (state, action) pairs -> Q-values."""
+        xs = F.relu(self.fcs1(self.bn1(state)))
+        x = torch.cat((self.bn2(xs), action), dim=1)
+        x = F.relu(self.fc2(x))
+        return self.fc3(x)
+```
+
+On reflection this actually makes a lot of sense since the actions predicted by the actor that are used as input to the critic are already clipped and technically not part of a batch that requires reduction of variance.
+
+## Improving the Training Loop
+Right after noise decay, the most significant improvement in the agent's score was due to the removal of the test in the training loop that would quit an episode if the agent had finished.  In this environment this happens systematically at step 1000. Doubling the number of steps kept the agent busy with a greater number of experiences per episode.
+
+## Batch Size
+
+Next on the line of significant hyper parameters was the batch size.  As batch size was increased, the agent was able to solve the environment in around 120 episodes, depending also on the seed value.
+
+### Batch Size 64 Results
+![Batch Size 64 Results](images/batch-normalization-batch-size-64.png)
+
+### Batch Size 256 Results
+![Batch Size 256 Results](images/batch-normalization-batch-size-256.png)
+
+### Batch Size 512 Results
+![Batch Size 512 Results](images/batch-normalization-batch-size-512.png)
