@@ -41,14 +41,18 @@ The following instructions are based on having Minconda installed on your system
 
 1. Create a conda python 3.6 environment using:
 
-```conda create -n p2 python=3.6```
+    ```conda create -n p2 python=3.6```
 
 2. Activate the new environement using:
 
-```conda activate p2```
+    ```conda activate p2```
 
 3. Install the Udacity DRLND python dependencies by running:
 
-```pip install ./python```
+    ```pip install ./python```
 
-Follow the instructions in `Continuous_Control.ipynb` to get training the agent!
+## Running the Notebook
+
+To run the solution notebook, enter the following and follow the instructions in `Continuous_Control.ipynb` to train the agent!
+
+```jupyter notebook```
