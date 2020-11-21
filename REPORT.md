@@ -54,12 +54,20 @@ In this experiment the model was initially updated to include a `BatchNorm1d` la
 
 On reflection this actually makes a lot of sense since the actions predicted by the actor that are used as input to the critic are already clipped and technically not part of a batch that requires reduction of variance.
 
+## Adam Optimizer Weight Decay
+
+The DDPG article used an L2 weight decay in the Adam optimizer for both the actor and critic of 0.02.  Unfortunately in the case of the Reacher environment, once batch normalization was in place, clearly a value of 0.02 was much too high and was impeding the agent from learning.  Perhaps some very tiny values, let's say 1e5 or 1e6 might have accelerated learning.  Indeed in the [Decoupled Weight Decay Regularization](https://arxiv.org/abs/1711.05101) paper that introduced weight decay in the optimizer, the authors clearly state that
+
+> Optimal  weight  decay  depends  on  the  total  number  of  batch  passes/weight  updates.Ourempirical analysis of SGD and Adam suggests that the larger the runtime/number of batchpasses to be performed, the smaller the optimal weight decay.
+
+In any case the value of 0.02 was not working and a value of 0 (the default value in the Pytorch implementation) allowed for further progress.
+
 ## Improving the Training Loop
 Right after noise decay, the most significant improvement in the agent's score was due to the removal of the test in the training loop that would quit an episode if the agent had finished.  In this environment this happens systematically at step 1000. Doubling the number of steps kept the agent busy with a greater number of experiences per episode.
 
 ## Batch Size
 
-Next on the line of significant hyper parameters was the batch size.  As batch size was increased, the agent was able to solve the environment in around 120 episodes, depending also on the seed value.
+Next on the line of significant hyper parameters was batch size.  As batch size was increased, the agent was able to solve the environment in around 120 episodes, depending also on the seed value.  The screenshots below show results for 2000 steps per episode as batch size is increased from 64, to 256 and finally 512.  Clearly for the Reacher environment a large batch size (the DDPG article used 64) allows the agent to learn faster and it would be interesting to explore in future work if this is a general principle or a principle that can be applied to certain types of environments.
 
 ### Batch Size 64 Results
 ![Batch Size 64 Results](images/batch-normalization-batch-size-64.png)
@@ -69,3 +77,7 @@ Next on the line of significant hyper parameters was the batch size.  As batch s
 
 ### Batch Size 512 Results
 ![Batch Size 512 Results](images/batch-normalization-batch-size-512.png)
+
+## Further Work
+
+One of the conclusions of this project is that it's seemingly small changes in hyperparameters or implementation can produce very different results.  This would prone a very conservative approach to tuning the performance of a deep reinforcement learning agent, slowly starting from a baseline and moving up from there, tuning various aspects of an experiment and monitoring for gains in performance.  This conservative stance would prone perhaps even starting with very simple environments initially and working your way up once a high performing agent was found.  Unfortunately, as this work shows, the path from the Pendulum environment or the Bipedal environment for which we had more or less working solutions to a significantly more complex environment like Reacher is not clear and seemingly requires starting over with the hyperparameter search to improve a baseline performance.  Clearly the automation of hyperparameter search and / or a set of guidelines parametrized by problem space complexity would be of great help.
